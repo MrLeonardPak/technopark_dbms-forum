@@ -13,15 +13,11 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-const initialScriptPath = "./db/db.sql"
-
 func main() {
-
 	fRouter := router.New()
-	api.DBS = initDB(context.Background(), initialScriptPath)
+	api.DBS = initDB(context.Background())
 	api.InitRouters(fRouter.Group("/api"))
-	log.Fatal(fasthttp.ListenAndServe(":5000", wrapperHeader(fRouter.Handler)).Error())
-
+	log.Fatal(fasthttp.ListenAndServe(":"+os.Getenv(("SERVER_PORT")), wrapperHeader(fRouter.Handler)).Error())
 }
 
 func wrapperHeader(handler fasthttp.RequestHandler) fasthttp.RequestHandler {
@@ -31,13 +27,13 @@ func wrapperHeader(handler fasthttp.RequestHandler) fasthttp.RequestHandler {
 	}
 }
 
-func initDB(defaultCtx context.Context, initScript string) *pgxpool.Pool {
+func initDB(defaultCtx context.Context) *pgxpool.Pool {
 	connectString := fmt.Sprintf(
 		"user=%s password=%s host=%s port=%s dbname=%s sslmode=disable TimeZone=Europe/Moscow",
 		os.Getenv(("POSTGRES_USER")),
 		os.Getenv(("POSTGRES_PASSWORD")),
 		os.Getenv(("POSTGRES_HOST")),
-		"5432",
+		os.Getenv(("POSTGRES_PORT")),
 		os.Getenv(("POSTGRES_DB")),
 	)
 	fmt.Println(connectString)
@@ -58,16 +54,6 @@ func initDB(defaultCtx context.Context, initScript string) *pgxpool.Pool {
 
 	if err = pool.Ping(defaultCtx); err != nil {
 		log.Fatal("Ping error: ", err)
-	}
-
-	sql, err := os.ReadFile(initScript)
-	if err != nil {
-		log.Fatal("ReadFile error: ", err)
-	}
-
-	_, err = pool.Exec(defaultCtx, string(sql))
-	if err != nil {
-		log.Fatal("Exec error: ", err)
 	}
 
 	return pool

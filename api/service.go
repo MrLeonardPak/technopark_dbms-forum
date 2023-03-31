@@ -13,7 +13,7 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-const initialScriptPath = "./db/db.sql"
+const initialScriptPath = "/go/db/init-db.sql"
 
 func GetServiceStatus(fastCtx *fasthttp.RequestCtx) {
 	ctx := context.Background()
@@ -63,6 +63,7 @@ func ClearServiceData(fastCtx *fasthttp.RequestCtx) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	response.Send(http.StatusOK, models.Error{
 		Message: "ok",
 	}, fastCtx)
