@@ -1,8 +1,10 @@
 package api
 
 import (
+	"github.com/MrLeonardPak/technopark_forum-dbms/middlewares"
 	"github.com/fasthttp/router"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/valyala/fasthttp"
 )
 
 var DBS *pgxpool.Pool
@@ -23,19 +25,19 @@ func initForum(g *router.Group) {
 		users         = subUrl + "/users"
 		threads       = subUrl + "/threads"
 	)
-	g.POST(create, CreateForum)
-	g.GET(details, GetForumDetails)
-	g.POST(sluggedCreate, CreateForumThread)
-	g.GET(users, GetForumUsers)
-	g.GET(threads, GetForumThreads)
+	g.POST(create, apiMiddleware(CreateForum))
+	g.GET(details, apiMiddleware(GetForumDetails))
+	g.POST(sluggedCreate, apiMiddleware(CreateForumThread))
+	g.GET(users, apiMiddleware(GetForumUsers))
+	g.GET(threads, apiMiddleware(GetForumThreads))
 }
 
 func initPost(g *router.Group) {
 	const (
 		postDetails = "/{" + postSlug + "}/details"
 	)
-	g.GET(postDetails, GetPostDetails)
-	g.POST(postDetails, UpdatePostDetails)
+	g.GET(postDetails, apiMiddleware(GetPostDetails))
+	g.POST(postDetails, apiMiddleware(UpdatePostDetails))
 }
 
 func initService(g *router.Group) {
@@ -43,8 +45,8 @@ func initService(g *router.Group) {
 		clear  = "/clear"
 		status = "/status"
 	)
-	g.GET(status, GetServiceStatus)
-	g.POST(clear, ClearServiceData)
+	g.GET(status, apiMiddleware(GetServiceStatus))
+	g.POST(clear, apiMiddleware(ClearServiceData))
 }
 
 func initThread(g *router.Group) {
@@ -55,11 +57,11 @@ func initThread(g *router.Group) {
 		posts   = subUrl + "/posts"
 		vote    = subUrl + "/vote"
 	)
-	g.POST(create, CreateThreadPost)
-	g.GET(details, GetThreadDetails)
-	g.POST(details, UpdateThreadDetails)
-	g.GET(posts, GetThreadPosts)
-	g.POST(vote, SetThreadVote)
+	g.POST(create, apiMiddleware(CreateThreadPost))
+	g.GET(details, apiMiddleware(GetThreadDetails))
+	g.POST(details, apiMiddleware(UpdateThreadDetails))
+	g.GET(posts, apiMiddleware(GetThreadPosts))
+	g.POST(vote, apiMiddleware(SetThreadVote))
 }
 
 func initUser(g *router.Group) {
@@ -68,9 +70,13 @@ func initUser(g *router.Group) {
 		create  = subUrl + "/create"
 		profile = subUrl + "/profile"
 	)
-	g.POST(create, CreateUser)
-	g.GET(profile, GetUserProfile)
-	g.POST(profile, UpdateUserProfile)
+	g.POST(create, apiMiddleware(CreateUser))
+	g.GET(profile, apiMiddleware(GetUserProfile))
+	g.POST(profile, apiMiddleware(UpdateUserProfile))
+}
+
+func apiMiddleware(handler fasthttp.RequestHandler) fasthttp.RequestHandler {
+	return middlewares.WrapperRPS(middlewares.WrapperHeader(handler))
 }
 
 func InitRouters(g *router.Group) {

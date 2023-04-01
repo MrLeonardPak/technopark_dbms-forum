@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/MrLeonardPak/technopark_forum-dbms/api"
+	"github.com/MrLeonardPak/technopark_forum-dbms/middlewares"
 	"github.com/fasthttp/router"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/valyala/fasthttp"
@@ -15,16 +16,13 @@ import (
 
 func main() {
 	fRouter := router.New()
+
+	middlewares.InitPrometheus(fRouter)
+
 	api.DBS = initDB(context.Background())
 	api.InitRouters(fRouter.Group("/api"))
-	log.Fatal(fasthttp.ListenAndServe(":"+os.Getenv(("SERVER_PORT")), wrapperHeader(fRouter.Handler)).Error())
-}
 
-func wrapperHeader(handler fasthttp.RequestHandler) fasthttp.RequestHandler {
-	return func(ctx *fasthttp.RequestCtx) {
-		ctx.Response.Header.Set("Content-Type", "application/json")
-		handler(ctx)
-	}
+	log.Fatal(fasthttp.ListenAndServe(":"+os.Getenv(("SERVER_PORT")), fRouter.Handler).Error())
 }
 
 func initDB(defaultCtx context.Context) *pgxpool.Pool {

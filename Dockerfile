@@ -1,4 +1,4 @@
-FROM golang:latest
+FROM golang:alpine
 COPY . /go/src/api
 
 RUN cd src/api \
