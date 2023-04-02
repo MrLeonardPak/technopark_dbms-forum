@@ -10,21 +10,21 @@ import (
 
 const prometheusPath = "/metrics"
 
-var rpsCounter = prometheus.NewCounter(
+var requests = prometheus.NewCounter(
 	prometheus.CounterOpts{
-		Name: "rps",
-		Help: "Request Per Second",
+		Name: "forum_backend_requests_total",
+		Help: "All requests counter",
 	},
 )
 
 func WrapperRPS(handler fasthttp.RequestHandler) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
-		rpsCounter.Inc()
+		requests.Inc()
 		handler(ctx)
 	}
 }
 
 func InitPrometheus(r *router.Router) {
-	prometheus.MustRegister(rpsCounter)
+	prometheus.MustRegister(requests)
 	r.GET(prometheusPath, fasthttpadaptor.NewFastHTTPHandler(promhttp.Handler()))
 }
